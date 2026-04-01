@@ -39,7 +39,7 @@ export function generatePackageJson(
   detectedDeps: string[]
 ): string {
   const deps: Record<string, string> = {
-    'next': '14.2.21',
+    'next': '14.2.25',
     'react': '^18.3.1',
     'react-dom': '^18.3.1',
   }
