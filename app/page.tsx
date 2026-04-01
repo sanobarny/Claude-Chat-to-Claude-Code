@@ -11,6 +11,13 @@ interface ProjectFile {
   content: string
 }
 
+interface DeployedApp {
+  name: string
+  repoUrl: string
+  commitUrl: string
+  timestamp: string
+}
+
 type Step = 'upload' | 'configure' | 'preview' | 'deploy'
 
 export default function Home() {
@@ -23,10 +30,9 @@ export default function Home() {
   // GitHub settings
   const [token, setToken] = useState('')
   const [repoMode, setRepoMode] = useState<'new' | 'existing'>('new')
-  const [newRepoName, setNewRepoName] = useState('')
+  const [repoName, setRepoName] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
   const [selectedRepo, setSelectedRepo] = useState('')
-  const [projectName, setProjectName] = useState('')
 
   // Preview state
   const [generatedFiles, setGeneratedFiles] = useState<ProjectFile[]>([])
@@ -38,10 +44,17 @@ export default function Home() {
   const [commitUrl, setCommitUrl] = useState('')
   const [deployError, setDeployError] = useState('')
 
-  // Load token from localStorage
+  // History of deployed apps
+  const [deployedApps, setDeployedApps] = useState<DeployedApp[]>([])
+
+  // Load token and history from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('github-token')
     if (saved) setToken(saved)
+    const history = localStorage.getItem('deployed-apps')
+    if (history) {
+      try { setDeployedApps(JSON.parse(history)) } catch {}
+    }
   }, [])
 
   // Save token to localStorage
@@ -52,9 +65,13 @@ export default function Home() {
 
   // Transform files
   const handleTransform = async () => {
+    const name = repoName.trim()
+    if (!name) {
+      alert('Please enter a project/repo name')
+      return
+    }
     setTransforming(true)
     try {
-      const name = projectName || newRepoName || 'my-app'
       const res = await fetch('/api/transform', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -75,12 +92,17 @@ export default function Home() {
   const handleDeploy = async () => {
     setDeployStage('creating-repo')
     setDeployError('')
+    setRepoUrl('')
+    setCommitUrl('')
 
     try {
       let owner: string
       let repo: string
 
       if (repoMode === 'new') {
+        const name = repoName.trim()
+        if (!name) throw new Error('Repo name is required')
+
         // Create new repo
         const res = await fetch('/api/github/repos', {
           method: 'POST',
@@ -88,7 +110,7 @@ export default function Home() {
             'Content-Type': 'application/json',
             'x-github-token': token,
           },
-          body: JSON.stringify({ name: newRepoName || projectName, isPrivate }),
+          body: JSON.stringify({ name, isPrivate }),
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error)
@@ -98,7 +120,7 @@ export default function Home() {
         repo = fullName.split('/')[1]
         setRepoUrl(data.repo.html_url)
 
-        // Wait a moment for GitHub to initialize the repo
+        // Wait for GitHub to initialize the repo
         await new Promise((r) => setTimeout(r, 2000))
       } else {
         // Use existing repo
@@ -120,22 +142,50 @@ export default function Home() {
           owner,
           repo,
           files: generatedFiles,
-          commitMessage: `Deploy ${projectName || 'app'} from Claude Chat`,
+          commitMessage: `Deploy ${repoName.trim() || 'app'} from Claude Chat`,
         }),
       })
       const pushData = await pushRes.json()
       if (!pushRes.ok) throw new Error(pushData.error)
 
-      setCommitUrl(pushData.commitUrl)
+      const newCommitUrl = pushData.commitUrl
+      const newRepoUrl = `https://github.com/${owner}/${repo}`
+      setCommitUrl(newCommitUrl)
+      setRepoUrl(newRepoUrl)
       setDeployStage('done')
+
+      // Save to history
+      const newApp: DeployedApp = {
+        name: repoName.trim(),
+        repoUrl: newRepoUrl,
+        commitUrl: newCommitUrl,
+        timestamp: new Date().toISOString(),
+      }
+      const updatedHistory = [newApp, ...deployedApps].slice(0, 20)
+      setDeployedApps(updatedHistory)
+      localStorage.setItem('deployed-apps', JSON.stringify(updatedHistory))
     } catch (err) {
       setDeployError(err instanceof Error ? err.message : 'Deploy failed')
       setDeployStage('error')
     }
   }
 
+  // Reset everything for a new deployment
+  const resetForNewDeploy = () => {
+    setFiles([])
+    setGeneratedFiles([])
+    setDeployStage('idle')
+    setRepoUrl('')
+    setCommitUrl('')
+    setDeployError('')
+    setStep('upload')
+    setRepoName('')
+    setSelectedRepo('')
+    setRepoMode('new')
+  }
+
   const canConfigure = files.length > 0
-  const canTransform = token && (repoMode === 'new' ? (newRepoName || projectName) : selectedRepo)
+  const canTransform = token && (repoMode === 'new' ? repoName.trim() : selectedRepo)
   const canDeploy = generatedFiles.length > 0
 
   return (
@@ -160,7 +210,7 @@ export default function Home() {
           title="Upload JSX Files"
           description="Drag & drop or paste the JSX code from Claude Chat"
           active={step === 'upload'}
-          completed={files.length > 0}
+          completed={files.length > 0 && step !== 'upload'}
         >
           <FileUploader files={files} onFilesChange={setFiles} />
           {canConfigure && (
@@ -180,30 +230,36 @@ export default function Home() {
           <Section
             number={2}
             title="Configure & Connect GitHub"
-            description="Set up your GitHub token and choose where to deploy"
+            description="Name your app and choose where to push it"
             active={step === 'configure'}
             completed={step === 'preview' || step === 'deploy'}
           >
             <div className="space-y-5">
+              {/* Single name field used for both project name and repo name */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Project Name
+                  App Name{repoMode === 'new' && ' (also used as GitHub repo name)'}
                 </label>
                 <input
                   type="text"
                   placeholder="my-awesome-app"
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
+                  value={repoName}
+                  onChange={(e) => setRepoName(e.target.value)}
                   className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"
                 />
+                {repoMode === 'new' && repoName.trim() && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Will create: github.com/your-username/{repoName.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-')}
+                  </p>
+                )}
               </div>
               <GitHubSettings
                 token={token}
                 onTokenChange={handleTokenChange}
                 repoMode={repoMode}
                 onRepoModeChange={setRepoMode}
-                newRepoName={newRepoName}
-                onNewRepoNameChange={setNewRepoName}
+                newRepoName={repoName}
+                onNewRepoNameChange={setRepoName}
                 isPrivate={isPrivate}
                 onIsPrivateChange={setIsPrivate}
                 selectedRepo={selectedRepo}
@@ -259,7 +315,9 @@ export default function Home() {
                   disabled={!canDeploy}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-40"
                 >
-                  Deploy to GitHub →
+                  {repoMode === 'new'
+                    ? `Create Repo & Deploy →`
+                    : `Push to ${selectedRepo.split('/')[1] || 'repo'} →`}
                 </button>
               </div>
             )}
@@ -300,22 +358,55 @@ export default function Home() {
             {deployStage === 'done' && (
               <div className="mt-6">
                 <button
-                  onClick={() => {
-                    setFiles([])
-                    setGeneratedFiles([])
-                    setDeployStage('idle')
-                    setStep('upload')
-                    setProjectName('')
-                    setNewRepoName('')
-                    setSelectedRepo('')
-                  }}
-                  className="px-6 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700"
+                  onClick={resetForNewDeploy}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
                 >
-                  Deploy Another App
+                  + Deploy Another App
                 </button>
               </div>
             )}
           </Section>
+        )}
+
+        {/* Deployment History */}
+        {deployedApps.length > 0 && (
+          <section className="rounded-xl border border-gray-800 bg-gray-900/20 p-6">
+            <h2 className="text-lg font-semibold mb-4">Deployed Apps</h2>
+            <div className="space-y-3">
+              {deployedApps.map((app, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg px-4 py-3"
+                >
+                  <div>
+                    <span className="text-sm font-medium">{app.name}</span>
+                    <span className="text-xs text-gray-500 ml-3">
+                      {new Date(app.timestamp).toLocaleDateString()}{' '}
+                      {new Date(app.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div className="flex gap-3">
+                    <a
+                      href={app.repoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-400 hover:text-blue-300"
+                    >
+                      GitHub
+                    </a>
+                    <a
+                      href={app.commitUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-gray-400 hover:text-gray-300"
+                    >
+                      Commit
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
       </main>
     </div>

@@ -27,8 +27,6 @@ export default function GitHubSettings({
   onTokenChange,
   repoMode,
   onRepoModeChange,
-  newRepoName,
-  onNewRepoNameChange,
   isPrivate,
   onIsPrivateChange,
   selectedRepo,
@@ -47,12 +45,10 @@ export default function GitHubSettings({
       return
     }
 
-    // Validate token and fetch repos
     const fetchRepos = async () => {
       setLoading(true)
       setError('')
       try {
-        // Get username
         const userRes = await fetch('https://api.github.com/user', {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -60,7 +56,6 @@ export default function GitHubSettings({
         const userData = await userRes.json()
         setUsername(userData.login)
 
-        // Fetch repos
         const res = await fetch('/api/github/repos', {
           headers: { 'x-github-token': token },
         })
@@ -105,13 +100,13 @@ export default function GitHubSettings({
         </div>
         {username && (
           <p className="text-sm text-green-400 mt-2">
-            ✓ Connected as <span className="font-medium">{username}</span>
+            Connected as <span className="font-medium">{username}</span>
           </p>
         )}
-        {error && <p className="text-sm text-red-400 mt-2">✕ {error}</p>}
+        {error && <p className="text-sm text-red-400 mt-2">{error}</p>}
         <p className="text-xs text-gray-600 mt-2">
           Needs <code className="text-gray-500">repo</code> scope.{' '}
-          Create one at GitHub → Settings → Developer settings → Personal access tokens
+          Create one at GitHub Settings → Developer settings → Personal access tokens
         </p>
       </div>
 
@@ -131,7 +126,7 @@ export default function GitHubSettings({
                     : 'bg-gray-800 text-gray-400 hover:text-white'
                 }`}
               >
-                Create New
+                Create New Repo
               </button>
               <button
                 onClick={() => onRepoModeChange('existing')}
@@ -141,20 +136,13 @@ export default function GitHubSettings({
                     : 'bg-gray-800 text-gray-400 hover:text-white'
                 }`}
               >
-                Use Existing
+                Use Existing Repo
               </button>
             </div>
           </div>
 
           {repoMode === 'new' ? (
-            <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="my-awesome-app"
-                value={newRepoName}
-                onChange={(e) => onNewRepoNameChange(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-              />
+            <div>
               <label className="flex items-center gap-2 text-sm text-gray-400">
                 <input
                   type="checkbox"
@@ -178,7 +166,7 @@ export default function GitHubSettings({
                   <option value="">Select a repository...</option>
                   {repos.map((repo) => (
                     <option key={repo.full_name} value={repo.full_name}>
-                      {repo.full_name} {repo.private ? '🔒' : ''}
+                      {repo.full_name} {repo.private ? '(private)' : ''}
                     </option>
                   ))}
                 </select>
