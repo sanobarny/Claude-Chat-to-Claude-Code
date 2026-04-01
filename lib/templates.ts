@@ -40,8 +40,8 @@ export function generatePackageJson(
 ): string {
   const deps: Record<string, string> = {
     'next': '^15.1.0',
-    'react': '^18.3.1',
-    'react-dom': '^18.3.1',
+    'react': '^19.0.0',
+    'react-dom': '^19.0.0',
   }
 
   for (const dep of detectedDeps) {
