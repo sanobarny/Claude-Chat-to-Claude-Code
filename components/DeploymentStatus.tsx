@@ -40,7 +40,7 @@ export default function DeploymentStatus({
               ? 'active'
               : stage === 'done'
               ? 'done'
-              : stage === 'error' && stage !== 'creating-repo'
+              : stage === 'error'
               ? 'error'
               : 'pending'
           }
