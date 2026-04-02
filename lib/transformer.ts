@@ -20,6 +20,24 @@ export interface OutputFile {
   content: string
 }
 
+// Files that should never be included from uploads — we generate our own
+const BLOCKED_FILES = new Set([
+  'next.config.js',
+  'next.config.ts',
+  'next.config.mjs',
+  'vercel.json',
+  'package.json',
+  'package-lock.json',
+  'yarn.lock',
+  'pnpm-lock.yaml',
+  'tsconfig.json',
+  'postcss.config.js',
+  'postcss.config.mjs',
+  'tailwind.config.js',
+  'tailwind.config.ts',
+  '.gitignore',
+])
+
 /**
  * Detect npm dependencies by scanning import/require statements in JSX content.
  */
@@ -41,21 +59,6 @@ export function detectDependencies(files: InputFile[]): string[] {
   }
 
   return Array.from(deps)
-}
-
-/**
- * Detect the main/default export component name from a JSX file.
- */
-function detectDefaultExport(content: string): string | null {
-  // export default function ComponentName
-  const funcMatch = content.match(/export\s+default\s+function\s+(\w+)/)
-  if (funcMatch) return funcMatch[1]
-
-  // export default ComponentName
-  const directMatch = content.match(/export\s+default\s+(\w+)\s*;?\s*$/)
-  if (directMatch) return directMatch[1]
-
-  return null
 }
 
 /**
@@ -124,26 +127,80 @@ function addUseClientIfNeeded(content: string): string {
 }
 
 /**
+ * Sanitize JSX content to be Vercel-compatible.
+ * Fixes common issues from Claude Chat artifacts.
+ */
+function sanitizeContent(content: string): string {
+  let result = content
+
+  // Remove // @ts-nocheck — we want proper types, not suppression
+  result = result.replace(/^\s*\/\/\s*@ts-nocheck\s*\n?/gm, '')
+
+  // Remove // @ts-ignore comments
+  result = result.replace(/^\s*\/\/\s*@ts-ignore\s*\n?/gm, '')
+
+  // Remove any `export const config = { ... output: 'export' }` patterns
+  // that Claude might add thinking it helps with static export
+  result = result.replace(/export\s+const\s+config\s*=\s*\{[^}]*output\s*:\s*['"]export['"][^}]*\}\s*;?\n?/g, '')
+
+  return result
+}
+
+/**
+ * Sanitize a Next.js config string to ensure it's Vercel-compatible.
+ * Removes dangerous options that break Vercel deployment.
+ */
+function sanitizeNextConfig(content: string): string {
+  // Remove output: 'export' — this breaks Vercel's Next.js runtime
+  let result = content.replace(/\boutput\s*:\s*['"]export['"]\s*,?/g, '')
+
+  // Remove distDir overrides — Vercel expects default .next
+  result = result.replace(/\bdistDir\s*:\s*['"][^'"]*['"]\s*,?/g, '')
+
+  // Remove trailingSlash if combined with export (can cause issues)
+  // Keep it if there's no export though, it's fine for server mode
+
+  return result
+}
+
+/**
  * Determine the clean filename for a component file.
  */
 function cleanFilename(filename: string): string {
-  // Remove file extension, normalize
   let name = filename.replace(/\.(jsx|tsx|js|ts)$/, '')
-  // If it doesn't have an extension, add .tsx
   return name + '.tsx'
 }
 
 /**
+ * Check if a filename should be blocked from uploads.
+ */
+function isBlockedFile(filename: string): boolean {
+  const lower = filename.toLowerCase()
+  return BLOCKED_FILES.has(lower) || lower === 'vercel.json'
+}
+
+/**
  * Transform uploaded JSX files into a complete Next.js project.
+ *
+ * IMPORTANT: This always generates Vercel-compatible output:
+ * - No `output: 'export'` in next.config (Vercel needs .next directory)
+ * - No vercel.json (Vercel auto-detects Next.js)
+ * - No @ts-nocheck (proper types instead)
+ * - Always includes "use client" where needed
+ * - Always has proper default exports
  */
 export function transformToNextProject(
   files: InputFile[],
   projectName: string
 ): OutputFile[] {
   const output: OutputFile[] = []
-  const detectedDeps = detectDependencies(files)
 
-  // Add boilerplate files
+  // Filter out config files from uploads — we generate our own safe versions
+  const jsxFiles = files.filter((f) => !isBlockedFile(f.filename))
+
+  const detectedDeps = detectDependencies(jsxFiles)
+
+  // Generate Vercel-safe boilerplate (these override anything from uploads)
   output.push({ path: 'package.json', content: generatePackageJson(projectName, detectedDeps) })
   output.push({ path: 'next.config.js', content: NEXT_CONFIG })
   output.push({ path: 'tsconfig.json', content: TSCONFIG })
@@ -153,20 +210,22 @@ export function transformToNextProject(
   output.push({ path: 'app/layout.tsx', content: generateLayout(projectName) })
   output.push({ path: '.gitignore', content: GITIGNORE })
 
-  if (files.length === 1) {
+  // Do NOT generate vercel.json — Vercel auto-detects Next.js and handles it
+
+  if (jsxFiles.length === 1) {
     // Single file mode: use as page.tsx directly
-    let content = files[0].content
+    let content = jsxFiles[0].content
+    content = sanitizeContent(content)
     content = addUseClientIfNeeded(content)
     content = ensureDefaultExport(content)
     output.push({ path: 'app/page.tsx', content })
-  } else {
-    // Multi-file mode: place components in components/, create page that imports main one
+  } else if (jsxFiles.length > 1) {
+    // Multi-file mode
     let mainComponent: InputFile | null = null
     const componentFiles: InputFile[] = []
 
-    for (const file of files) {
+    for (const file of jsxFiles) {
       const lowerName = file.filename.toLowerCase()
-      // Identify the main/page component
       if (
         lowerName.includes('app') ||
         lowerName.includes('page') ||
@@ -180,29 +239,29 @@ export function transformToNextProject(
       }
     }
 
-    // If no obvious main component, use the first file
     if (!mainComponent) {
-      mainComponent = files[0]
+      mainComponent = jsxFiles[0]
       componentFiles.length = 0
-      for (let i = 1; i < files.length; i++) {
-        componentFiles.push(files[i])
+      for (let i = 1; i < jsxFiles.length; i++) {
+        componentFiles.push(jsxFiles[i])
       }
     }
 
-    // Add component files
+    // Add component files (sanitized)
     for (const comp of componentFiles) {
-      let content = addUseClientIfNeeded(comp.content)
+      let content = sanitizeContent(comp.content)
+      content = addUseClientIfNeeded(content)
       const cleanName = cleanFilename(comp.filename)
       output.push({ path: `components/${cleanName}`, content })
     }
 
-    // Create page.tsx from main component
-    let mainContent = mainComponent.content
+    // Create page.tsx from main component (sanitized)
+    let mainContent = sanitizeContent(mainComponent.content)
 
-    // Rewrite relative imports to point to ../components/
+    // Rewrite relative imports to point to @/components/
     mainContent = mainContent.replace(
       /from\s+['"]\.\/([^'"]+)['"]/g,
-      (match, importPath) => {
+      (_match, importPath) => {
         const cleanPath = importPath.replace(/\.(jsx|tsx|js|ts)$/, '')
         return `from '@/components/${cleanPath}'`
       }
@@ -211,6 +270,13 @@ export function transformToNextProject(
     mainContent = addUseClientIfNeeded(mainContent)
     mainContent = ensureDefaultExport(mainContent)
     output.push({ path: 'app/page.tsx', content: mainContent })
+  }
+
+  // Final safety pass: ensure no output file has Vercel-breaking patterns
+  for (const file of output) {
+    if (file.path === 'next.config.js' || file.path === 'next.config.ts' || file.path === 'next.config.mjs') {
+      file.content = sanitizeNextConfig(file.content)
+    }
   }
 
   return output

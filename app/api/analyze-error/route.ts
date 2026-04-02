@@ -56,6 +56,66 @@ function analyzeError(errorText: string, files: { path: string; content: string 
   // Helper to find a file by path substring
   const findFile = (match: string) => files.find((f) => f.path.includes(match))
 
+  // ---- routes-manifest.json / output: 'export' on Vercel ----
+  // This is the #1 deployment killer: output: 'export' breaks Vercel's Next.js runtime
+  if (text.includes('routes-manifest') || text.includes('output') && text.includes('export') ||
+      text.includes('couldn\'t be found') || text.includes('distdir')) {
+    summaryParts.push('Vercel deployment broken by output: "export" in next.config')
+    const nextConfig = findFile('next.config')
+    if (nextConfig && /output\s*:\s*['"]export['"]/.test(nextConfig.content)) {
+      const fixed = nextConfig.content
+        .replace(/\boutput\s*:\s*['"]export['"]\s*,?/g, '')
+        .replace(/\bdistDir\s*:\s*['"][^'"]*['"]\s*,?/g, '')
+      fixes.push({
+        filePath: nextConfig.path,
+        description: 'Remove output: "export" from next.config — Vercel needs standard .next output',
+        oldContent: nextConfig.content,
+        newContent: fixed,
+      })
+    }
+    // Also remove vercel.json if it exists (can conflict)
+    const vercelJson = findFile('vercel.json')
+    if (vercelJson) {
+      fixes.push({
+        filePath: vercelJson.path,
+        description: 'Remove vercel.json — Vercel auto-detects Next.js, custom config causes conflicts',
+        oldContent: vercelJson.content,
+        newContent: '', // Empty = delete
+      })
+    }
+  }
+
+  // ---- Also proactively check for output: 'export' even if not reported ----
+  // Always scan for this dangerous pattern
+  const nextConfigFile = findFile('next.config')
+  if (nextConfigFile && /output\s*:\s*['"]export['"]/.test(nextConfigFile.content)) {
+    if (!summaryParts.some((s) => s.includes('output'))) {
+      summaryParts.push('Warning: next.config has output: "export" which will break Vercel deployment')
+      const fixed = nextConfigFile.content
+        .replace(/\boutput\s*:\s*['"]export['"]\s*,?/g, '')
+        .replace(/\bdistDir\s*:\s*['"][^'"]*['"]\s*,?/g, '')
+      fixes.push({
+        filePath: nextConfigFile.path,
+        description: 'Remove output: "export" — this breaks Vercel (it expects .next directory, not out/)',
+        oldContent: nextConfigFile.content,
+        newContent: fixed,
+      })
+    }
+  }
+
+  // ---- Proactively check for @ts-nocheck ----
+  for (const file of files) {
+    if (/^\s*\/\/\s*@ts-nocheck/.test(file.content)) {
+      summaryParts.push(`${file.path} has @ts-nocheck — masking real type errors`)
+      fixes.push({
+        filePath: file.path,
+        description: `Remove @ts-nocheck from ${file.path} — fix types properly instead`,
+        oldContent: file.content,
+        newContent: file.content.replace(/^\s*\/\/\s*@ts-nocheck\s*\n?/gm, ''),
+      })
+    }
+  }
+
   // ---- Hydration / SSR errors ----
   if (text.includes('hydration') || text.includes('server-rendered') || text.includes('did not match')) {
     summaryParts.push('Hydration mismatch detected')
