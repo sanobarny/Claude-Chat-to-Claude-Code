@@ -59,17 +59,38 @@ export default function Home() {
 
   // Archive
   const [archivedApps, setArchivedApps] = useState<ArchivedApp[]>([])
+  const [backupGistId, setBackupGistId] = useState('')
+  const [syncing, setSyncing] = useState(false)
+  const [syncStatus, setSyncStatus] = useState('')
 
   // Bug reporter
   const [reportingApp, setReportingApp] = useState<ArchivedApp | null>(null)
 
-  // Load from localStorage
+  // Load from localStorage — with migration safety
   useEffect(() => {
     const saved = localStorage.getItem('github-token')
     if (saved) setToken(saved)
+    const gist = localStorage.getItem('backup-gist-id')
+    if (gist) setBackupGistId(gist)
+
+    // Load archive with migration: handle old format gracefully
     const archive = localStorage.getItem('app-archive')
     if (archive) {
-      try { setArchivedApps(JSON.parse(archive)) } catch {}
+      try {
+        const parsed = JSON.parse(archive)
+        // Migrate old entries that may lack new fields
+        const migrated = parsed.map((app: Record<string, unknown>) => ({
+          name: app.name || 'Untitled',
+          repoUrl: app.repoUrl || '',
+          repoFullName: app.repoFullName || '',
+          commitUrl: app.commitUrl || '',
+          vercelUrl: app.vercelUrl || '',
+          timestamp: app.timestamp || new Date().toISOString(),
+          sourceFiles: Array.isArray(app.sourceFiles) ? app.sourceFiles : [],
+          projectFiles: Array.isArray(app.projectFiles) ? app.projectFiles : [],
+        }))
+        setArchivedApps(migrated)
+      } catch {}
     }
   }, [])
 
@@ -77,6 +98,91 @@ export default function Home() {
     setArchivedApps(apps)
     localStorage.setItem('app-archive', JSON.stringify(apps))
   }, [])
+
+  // Export archive as JSON file download
+  const handleExportArchive = () => {
+    const data = JSON.stringify(archivedApps, null, 2)
+    const blob = new Blob([data], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `claude-apps-backup-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // Import archive from JSON file
+  const handleImportArchive = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target?.result as string) as ArchivedApp[]
+        if (!Array.isArray(imported)) throw new Error('Invalid format')
+        // Merge: add imported apps that don't already exist
+        const existing = new Set(archivedApps.map((a) => a.repoFullName))
+        const merged = [...archivedApps]
+        for (const app of imported) {
+          if (!existing.has(app.repoFullName)) {
+            merged.push(app)
+            existing.add(app.repoFullName)
+          }
+        }
+        saveArchive(merged)
+        setSyncStatus(`Imported ${imported.length} app(s)`)
+        setTimeout(() => setSyncStatus(''), 3000)
+      } catch {
+        setSyncStatus('Import failed — invalid file')
+        setTimeout(() => setSyncStatus(''), 3000)
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  // Sync archive to GitHub Gist (cloud backup)
+  const handleCloudBackup = async () => {
+    if (!token) { setSyncStatus('GitHub token required'); return }
+    setSyncing(true)
+    setSyncStatus('')
+    try {
+      const res = await fetch('/api/github/backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-github-token': token },
+        body: JSON.stringify({ archive: archivedApps, gistId: backupGistId || undefined }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setBackupGistId(data.gistId)
+      localStorage.setItem('backup-gist-id', data.gistId)
+      setSyncStatus('Backed up to GitHub Gist')
+      setTimeout(() => setSyncStatus(''), 3000)
+    } catch (err) {
+      setSyncStatus(err instanceof Error ? err.message : 'Backup failed')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  // Restore archive from GitHub Gist
+  const handleCloudRestore = async () => {
+    if (!token) { setSyncStatus('GitHub token required'); return }
+    if (!backupGistId) { setSyncStatus('No backup found — backup first'); return }
+    setSyncing(true)
+    setSyncStatus('')
+    try {
+      const res = await fetch(`/api/github/backup?gistId=${backupGistId}`, {
+        headers: { 'x-github-token': token },
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      saveArchive(data.archive)
+      setSyncStatus(`Restored ${data.archive.length} app(s) from cloud`)
+      setTimeout(() => setSyncStatus(''), 3000)
+    } catch (err) {
+      setSyncStatus(err instanceof Error ? err.message : 'Restore failed')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const handleTokenChange = (t: string) => {
     setToken(t)
@@ -425,16 +531,58 @@ export default function Home() {
         )}
 
         {/* App Archive */}
-        {archivedApps.length > 0 && (
-          <section className="rounded-xl border border-gray-800 bg-gray-900/20 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Your Apps ({archivedApps.length})</h2>
-              <span className="text-xs text-gray-600">Saved locally — files archived for editing</span>
+        <section className="rounded-xl border border-gray-800 bg-gray-900/20 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Your Apps {archivedApps.length > 0 && `(${archivedApps.length})`}</h2>
+          </div>
+
+          {/* Backup / Restore Controls */}
+          <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-sm font-medium text-gray-300">Backup & Sync</h3>
+                <p className="text-xs text-gray-600">Your apps are saved in the browser. Backup to keep them safe across devices.</p>
+              </div>
+              {syncStatus && (
+                <span className={`text-xs px-2 py-1 rounded ${syncStatus.includes('fail') || syncStatus.includes('required') ? 'text-red-400 bg-red-900/20' : 'text-green-400 bg-green-900/20'}`}>
+                  {syncStatus}
+                </span>
+              )}
             </div>
+            <div className="flex flex-wrap gap-2">
+              {/* Local export/import */}
+              <button onClick={handleExportArchive} disabled={archivedApps.length === 0}
+                className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-md disabled:opacity-40 transition">
+                Download Backup
+              </button>
+              <label className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-md cursor-pointer transition">
+                Import Backup
+                <input type="file" accept=".json" className="hidden"
+                  onChange={(e) => e.target.files?.[0] && handleImportArchive(e.target.files[0])} />
+              </label>
+              <span className="text-gray-700 mx-1">|</span>
+              {/* Cloud sync */}
+              <button onClick={handleCloudBackup} disabled={syncing || !token || archivedApps.length === 0}
+                className="text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 px-3 py-1.5 rounded-md disabled:opacity-40 transition">
+                {syncing ? 'Syncing...' : backupGistId ? 'Sync to Cloud' : 'Backup to Cloud'}
+              </button>
+              <button onClick={handleCloudRestore} disabled={syncing || !token || !backupGistId}
+                className="text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 px-3 py-1.5 rounded-md disabled:opacity-40 transition">
+                Restore from Cloud
+              </button>
+              {backupGistId && (
+                <span className="text-xs text-gray-600 flex items-center">
+                  Cloud: synced
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* App list */}
+          {archivedApps.length > 0 ? (
             <div className="space-y-3">
               {archivedApps.map((app, i) => (
                 <div key={`${app.repoFullName}-${i}`} className="bg-gray-900 border border-gray-800 rounded-lg px-4 py-4">
-                  {/* App header */}
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="text-sm font-semibold">{app.name}</h3>
@@ -442,8 +590,8 @@ export default function Home() {
                       <p className="text-xs text-gray-500 mt-1">
                         Last deployed: {new Date(app.timestamp).toLocaleDateString()}{' '}
                         {new Date(app.timestamp).toLocaleTimeString()}
-                        {' · '}{app.sourceFiles.length} source file{app.sourceFiles.length !== 1 ? 's' : ''}
-                        {' · '}{app.projectFiles.length} project file{app.projectFiles.length !== 1 ? 's' : ''}
+                        {' · '}{app.sourceFiles?.length || 0} source file{(app.sourceFiles?.length || 0) !== 1 ? 's' : ''}
+                        {' · '}{app.projectFiles?.length || 0} project file{(app.projectFiles?.length || 0) !== 1 ? 's' : ''}
                       </p>
                     </div>
                   </div>
@@ -482,8 +630,13 @@ export default function Home() {
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <div className="text-center py-8 text-gray-600">
+              <p className="text-sm">No apps deployed yet.</p>
+              <p className="text-xs mt-1">Upload JSX from Claude Chat to get started, or import a backup.</p>
+            </div>
+          )}
+        </section>
       </main>
 
       {/* Bug Reporter Modal */}
