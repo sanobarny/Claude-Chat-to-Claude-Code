@@ -1,0 +1,22 @@
+{
+  "name": "Claude Chat → Vercel",
+  "short_name": "JSX Deploy",
+  "description": "Transform Claude Chat JSX artifacts into deployable Next.js apps",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e8e0f0",
+  "theme_color": "#e8e0f0",
+  "icons": [
+    {
+      "src": "/icon",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

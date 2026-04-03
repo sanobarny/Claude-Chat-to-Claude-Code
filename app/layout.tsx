@@ -1,13 +1,19 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Claude Chat → Vercel Deploy',
   description: 'Transform Claude Chat JSX artifacts into deployable Next.js apps on Vercel',
-  icons: {
-    icon: '/favicon.svg',
-    apple: '/logo.svg',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'JSX Deploy',
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#e8e0f0',
 }
 
 export default function RootLayout({
