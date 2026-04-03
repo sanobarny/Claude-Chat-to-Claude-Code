@@ -4,6 +4,10 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Claude Chat → Vercel Deploy',
   description: 'Transform Claude Chat JSX artifacts into deployable Next.js apps on Vercel',
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/logo.svg',
+  },
 }
 
 export default function RootLayout({
@@ -13,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-950 text-gray-100 min-h-screen">
+      <body className="bg-neu-base text-gray-700 min-h-screen">
         {children}
       </body>
     </html>

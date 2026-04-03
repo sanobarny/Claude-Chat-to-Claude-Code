@@ -356,34 +356,38 @@ export default function Home() {
   const canDeploy = generatedFiles.length > 0
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-neu-base">
       {/* Header */}
-      <header className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">Claude Chat → Vercel</h1>
-            <p className="text-sm text-gray-500">Transform JSX artifacts into deployable Next.js apps</p>
+      <header className="sticky top-0 z-10 bg-neu-base">
+        <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <img src="/logo.svg" alt="Logo" className="w-10 h-10 rounded-xl" />
+            <div>
+              <h1 className="text-xl font-bold text-neu-text">Claude Chat → Vercel</h1>
+              <p className="text-sm text-neu-text-muted">Transform JSX artifacts into deployable Next.js apps</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             {mode === 'update' && (
-              <span className="text-xs bg-yellow-600/20 text-yellow-400 px-2 py-1 rounded">
+              <span className="text-xs neu-btn-yellow px-3 py-1 rounded-full">
                 Updating: {repoName}
               </span>
             )}
             <StepIndicator current={step} />
           </div>
         </div>
+        <div className="max-w-5xl mx-auto px-6"><div className="h-px bg-gradient-to-r from-transparent via-neu-dark to-transparent" /></div>
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
         {/* Update mode banner */}
         {mode === 'update' && step === 'upload' && (
-          <div className="bg-yellow-900/20 border border-yellow-800 rounded-xl p-4 flex items-center justify-between">
+          <div className="neu-card-sm p-5 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-yellow-300">Updating: {repoName}</p>
-              <p className="text-xs text-yellow-500 mt-1">Upload new/modified JSX files — changes will auto-push to the existing repo</p>
+              <p className="text-sm font-medium text-neu-purple">Updating: {repoName}</p>
+              <p className="text-xs text-neu-text-muted mt-1">Upload new/modified JSX files — changes will auto-push to the existing repo</p>
             </div>
-            <button onClick={resetForNewDeploy} className="text-xs text-gray-400 hover:text-white px-3 py-1 border border-gray-700 rounded-lg">
+            <button onClick={resetForNewDeploy} className="neu-btn text-xs text-neu-text-light px-4 py-2 rounded-xl">
               Cancel — Deploy New
             </button>
           </div>
@@ -397,7 +401,7 @@ export default function Home() {
           {canConfigure && (
             <div className="flex justify-end mt-4">
               <button onClick={() => setStep('configure')}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                className="neu-btn-purple px-6 py-2.5 rounded-xl text-sm font-medium">
                 Next: Configure →
               </button>
             </div>
@@ -411,12 +415,12 @@ export default function Home() {
             active={step === 'configure'} completed={step === 'preview' || step === 'deploy'}>
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-neu-text mb-2">
                   App Name{mode === 'new' && repoMode === 'new' && ' (also used as GitHub repo name)'}
                 </label>
                 <input type="text" placeholder="my-awesome-app" value={repoName}
                   onChange={(e) => setRepoName(e.target.value)} readOnly={mode === 'update'}
-                  className={`w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 ${mode === 'update' ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  className={`w-full px-4 py-3 neu-input rounded-xl text-sm text-neu-text ${mode === 'update' ? 'opacity-60 cursor-not-allowed' : ''}`}
                 />
                 {mode === 'new' && repoMode === 'new' && repoName.trim() && (
                   <p className="text-xs text-gray-500 mt-1">
@@ -427,12 +431,12 @@ export default function Home() {
 
               {/* Vercel URL (custom or auto-generated) */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-neu-text mb-2">
                   Vercel URL <span className="text-xs text-gray-500">(optional — auto-detected if blank)</span>
                 </label>
                 <input type="text" placeholder={repoName ? guessVercelUrl(repoName) : 'https://your-app.vercel.app'}
                   value={vercelUrl} onChange={(e) => setVercelUrl(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-3 neu-input rounded-xl text-sm text-neu-text"
                 />
               </div>
 
@@ -453,9 +457,9 @@ export default function Home() {
 
               {step === 'configure' && (
                 <div className="flex justify-between mt-4">
-                  <button onClick={() => setStep('upload')} className="px-4 py-2 text-gray-400 hover:text-white text-sm">← Back</button>
+                  <button onClick={() => setStep('upload')} className="neu-btn px-4 py-2 rounded-xl text-sm text-neu-text-light">← Back</button>
                   <button onClick={handleTransform} disabled={!canTransform || transforming}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="neu-btn-purple px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed">
                     {transforming ? 'Transforming...' : 'Transform & Preview →'}
                   </button>
                 </div>
@@ -472,10 +476,10 @@ export default function Home() {
             <ProjectPreview files={generatedFiles} onFilesChange={setGeneratedFiles} />
             {step === 'preview' && (
               <div className="flex justify-between mt-4">
-                <button onClick={() => setStep('configure')} className="px-4 py-2 text-gray-400 hover:text-white text-sm">← Back</button>
+                <button onClick={() => setStep('configure')} className="neu-btn px-4 py-2 rounded-xl text-sm text-neu-text-light">← Back</button>
                 <button onClick={() => { setStep('deploy'); handleDeploy() }} disabled={!canDeploy}
                   className={`px-6 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-40 ${
-                    mode === 'update' ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700'
+                    mode === 'update' ? 'neu-btn-yellow' : 'neu-btn-green'
                   }`}>
                   {mode === 'update'
                     ? `Push Update & Auto-Deploy →`
@@ -495,13 +499,13 @@ export default function Home() {
             active={step === 'deploy'} completed={deployStage === 'done'}>
             <DeploymentStatus stage={deployStage} repoUrl={repoUrl} commitUrl={commitUrl} error={deployError} />
             {deployStage === 'done' && (vercelUrl || repoName) && (
-              <div className="mt-4 bg-blue-900/20 border border-blue-800 rounded-lg p-4">
-                <p className="text-sm font-medium text-blue-300 mb-2">Vercel Auto-Deploy</p>
+              <div className="mt-4 neu-card-inset p-5">
+                <p className="text-sm font-medium text-neu-purple mb-2">Vercel Auto-Deploy</p>
                 <a href={vercelUrl || guessVercelUrl(repoName)} target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-blue-400 hover:text-blue-300 underline">
+                  className="text-sm text-neu-blue hover:text-neu-purple underline">
                   → {vercelUrl || guessVercelUrl(repoName)}
                 </a>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-neu-text-muted mt-1">
                   {mode === 'new'
                     ? 'Import this repo at vercel.com/new to enable auto-deploy. After that, every push deploys automatically.'
                     : 'Vercel will auto-deploy this update within seconds.'}
@@ -510,18 +514,18 @@ export default function Home() {
             )}
             {deployStage === 'error' && (
               <div className="flex gap-3 mt-4">
-                <button onClick={() => setStep('configure')} className="px-4 py-2 text-gray-400 hover:text-white text-sm">← Back</button>
-                <button onClick={handleDeploy} className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Retry</button>
+                <button onClick={() => setStep('configure')} className="neu-btn px-4 py-2 rounded-xl text-sm text-neu-text-light">← Back</button>
+                <button onClick={handleDeploy} className="neu-btn-purple px-6 py-2.5 rounded-xl text-sm font-medium">Retry</button>
               </div>
             )}
             {deployStage === 'done' && (
               <div className="flex gap-3 mt-6">
-                <button onClick={resetForNewDeploy} className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                <button onClick={resetForNewDeploy} className="neu-btn-purple px-6 py-2.5 rounded-xl text-sm font-medium">
                   + Deploy New App
                 </button>
                 {mode === 'update' && (
                   <button onClick={() => { setFiles([]); setGeneratedFiles([]); setDeployStage('idle'); setCommitUrl(''); setDeployError(''); setStep('upload') }}
-                    className="px-6 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700">
+                    className="neu-btn-yellow px-6 py-2.5 rounded-xl text-sm font-medium">
                     Push Another Update
                   </button>
                 )}
@@ -531,47 +535,45 @@ export default function Home() {
         )}
 
         {/* App Archive */}
-        <section className="rounded-xl border border-gray-800 bg-gray-900/20 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Your Apps {archivedApps.length > 0 && `(${archivedApps.length})`}</h2>
+        <section className="neu-card p-7">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold text-neu-text">Your Apps {archivedApps.length > 0 && `(${archivedApps.length})`}</h2>
           </div>
 
           {/* Backup / Restore Controls */}
-          <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-4 mb-4">
+          <div className="neu-card-inset p-5 mb-5">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h3 className="text-sm font-medium text-gray-300">Backup & Sync</h3>
-                <p className="text-xs text-gray-600">Your apps are saved in the browser. Backup to keep them safe across devices.</p>
+                <h3 className="text-sm font-medium text-neu-text">Backup & Sync</h3>
+                <p className="text-xs text-neu-text-muted">Your apps are saved in the browser. Backup to keep them safe across devices.</p>
               </div>
               {syncStatus && (
-                <span className={`text-xs px-2 py-1 rounded ${syncStatus.includes('fail') || syncStatus.includes('required') ? 'text-red-400 bg-red-900/20' : 'text-green-400 bg-green-900/20'}`}>
+                <span className={`text-xs px-3 py-1 rounded-lg ${syncStatus.includes('fail') || syncStatus.includes('required') ? 'neu-btn-red' : 'neu-btn-green'}`}>
                   {syncStatus}
                 </span>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
-              {/* Local export/import */}
               <button onClick={handleExportArchive} disabled={archivedApps.length === 0}
-                className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-md disabled:opacity-40 transition">
+                className="neu-btn text-xs text-neu-text px-4 py-2 rounded-xl disabled:opacity-40">
                 Download Backup
               </button>
-              <label className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-md cursor-pointer transition">
+              <label className="neu-btn text-xs text-neu-text px-4 py-2 rounded-xl cursor-pointer">
                 Import Backup
                 <input type="file" accept=".json" className="hidden"
                   onChange={(e) => e.target.files?.[0] && handleImportArchive(e.target.files[0])} />
               </label>
-              <span className="text-gray-700 mx-1">|</span>
-              {/* Cloud sync */}
+              <span className="text-neu-text-muted mx-1 self-center">|</span>
               <button onClick={handleCloudBackup} disabled={syncing || !token || archivedApps.length === 0}
-                className="text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 px-3 py-1.5 rounded-md disabled:opacity-40 transition">
+                className="neu-btn-purple text-xs px-4 py-2 rounded-xl disabled:opacity-40">
                 {syncing ? 'Syncing...' : backupGistId ? 'Sync to Cloud' : 'Backup to Cloud'}
               </button>
               <button onClick={handleCloudRestore} disabled={syncing || !token || !backupGistId}
-                className="text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 px-3 py-1.5 rounded-md disabled:opacity-40 transition">
+                className="neu-btn-purple text-xs px-4 py-2 rounded-xl disabled:opacity-40">
                 Restore from Cloud
               </button>
               {backupGistId && (
-                <span className="text-xs text-gray-600 flex items-center">
+                <span className="text-xs text-neu-text-muted flex items-center">
                   Cloud: synced
                 </span>
               )}
@@ -580,14 +582,14 @@ export default function Home() {
 
           {/* App list */}
           {archivedApps.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {archivedApps.map((app, i) => (
-                <div key={`${app.repoFullName}-${i}`} className="bg-gray-900 border border-gray-800 rounded-lg px-4 py-4">
+                <div key={`${app.repoFullName}-${i}`} className="neu-card-sm p-5">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-sm font-semibold">{app.name}</h3>
-                      <p className="text-xs text-gray-600">{app.repoFullName}</p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <h3 className="text-sm font-semibold text-neu-text">{app.name}</h3>
+                      <p className="text-xs text-neu-text-light">{app.repoFullName}</p>
+                      <p className="text-xs text-neu-text-muted mt-1">
                         Last deployed: {new Date(app.timestamp).toLocaleDateString()}{' '}
                         {new Date(app.timestamp).toLocaleTimeString()}
                         {' · '}{app.sourceFiles?.length || 0} source file{(app.sourceFiles?.length || 0) !== 1 ? 's' : ''}
@@ -597,33 +599,33 @@ export default function Home() {
                   </div>
 
                   {/* Links */}
-                  <div className="flex flex-wrap gap-3 mt-3">
+                  <div className="flex flex-wrap gap-3 mt-4">
                     <a href={app.repoUrl} target="_blank" rel="noopener noreferrer"
-                      className="text-xs bg-gray-800 hover:bg-gray-700 text-blue-400 px-3 py-1.5 rounded-md">
+                      className="neu-btn text-xs text-neu-blue px-4 py-2 rounded-xl font-medium">
                       GitHub Repo
                     </a>
                     <a href={app.vercelUrl || guessVercelUrl(app.name)} target="_blank" rel="noopener noreferrer"
-                      className="text-xs bg-gray-800 hover:bg-gray-700 text-green-400 px-3 py-1.5 rounded-md">
-                      Vercel App →
+                      className="neu-btn-green text-xs px-4 py-2 rounded-xl font-medium">
+                      Vercel App
                     </a>
                     <a href={app.commitUrl} target="_blank" rel="noopener noreferrer"
-                      className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-1.5 rounded-md">
+                      className="neu-btn text-xs text-neu-text-light px-4 py-2 rounded-xl font-medium">
                       Last Commit
                     </a>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-800">
+                  <div className="flex gap-3 mt-4 pt-4 border-t border-neu-dark/30">
                     <button onClick={() => handleEditApp(app)}
-                      className="text-xs bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 px-3 py-1.5 rounded-md transition">
+                      className="neu-btn text-xs text-neu-purple px-4 py-2 rounded-xl font-medium">
                       Edit & Update
                     </button>
                     <button onClick={() => setReportingApp(app)}
-                      className="text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 px-3 py-1.5 rounded-md transition">
+                      className="neu-btn-red text-xs px-4 py-2 rounded-xl font-medium">
                       Report Bug / Auto-Fix
                     </button>
                     <button onClick={() => handleRemoveApp(i)}
-                      className="text-xs text-gray-600 hover:text-red-400 px-2 py-1.5 ml-auto transition">
+                      className="text-xs text-neu-text-muted hover:text-red-500 px-3 py-2 ml-auto transition">
                       Remove
                     </button>
                   </div>
@@ -631,7 +633,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-600">
+            <div className="text-center py-10 text-neu-text-muted">
               <p className="text-sm">No apps deployed yet.</p>
               <p className="text-xs mt-1">Upload JSX from Claude Chat to get started, or import a backup.</p>
             </div>
@@ -657,20 +659,20 @@ function Section({ number, title, description, active, completed, children }: {
   number: number; title: string; description: string; active: boolean; completed: boolean; children: React.ReactNode
 }) {
   return (
-    <section className={`rounded-xl border p-6 transition ${
-      active ? 'border-blue-600/50 bg-gray-900/50'
-        : completed ? 'border-green-800/30 bg-gray-900/20'
-        : 'border-gray-800 bg-gray-900/20 opacity-60'
+    <section className={`p-7 transition-all duration-300 ${
+      active ? 'neu-card'
+        : completed ? 'neu-card-sm opacity-80'
+        : 'neu-card-sm opacity-50'
     }`}>
-      <div className="flex items-center gap-3 mb-4">
-        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-          completed ? 'bg-green-600 text-white' : active ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-500'
+      <div className="flex items-center gap-4 mb-5">
+        <span className={`w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold transition-all ${
+          completed ? 'neu-btn-green' : active ? 'neu-btn-purple' : 'neu-pressed text-neu-text-muted'
         }`}>
           {completed ? '✓' : number}
         </span>
         <div>
-          <h2 className="text-lg font-semibold">{title}</h2>
-          <p className="text-sm text-gray-500">{description}</p>
+          <h2 className="text-lg font-semibold text-neu-text">{title}</h2>
+          <p className="text-sm text-neu-text-muted">{description}</p>
         </div>
       </div>
       {children}
@@ -688,16 +690,16 @@ function StepIndicator({ current }: { current: Step }) {
   const currentIdx = steps.findIndex((s) => s.key === current)
 
   return (
-    <div className="hidden sm:flex items-center gap-1">
+    <div className="hidden sm:flex items-center gap-1 neu-card-sm px-3 py-2">
       {steps.map((s, i) => (
         <div key={s.key} className="flex items-center">
-          <span className={`text-xs px-2 py-1 rounded ${
-            i === currentIdx ? 'bg-blue-600/20 text-blue-400 font-medium'
-              : i < currentIdx ? 'text-green-400' : 'text-gray-600'
+          <span className={`text-xs px-3 py-1 rounded-lg transition-all ${
+            i === currentIdx ? 'neu-btn-purple font-medium'
+              : i < currentIdx ? 'text-green-600 font-medium' : 'text-neu-text-muted'
           }`}>
             {s.label}
           </span>
-          {i < steps.length - 1 && <span className="text-gray-700 mx-1">›</span>}
+          {i < steps.length - 1 && <span className="text-neu-dark mx-1">›</span>}
         </div>
       ))}
     </div>

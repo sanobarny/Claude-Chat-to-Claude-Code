@@ -19,9 +19,6 @@ export default function ProjectPreview({ files, onFilesChange }: ProjectPreviewP
 
   if (!files.length) return null
 
-  // Build a simple tree structure
-  const tree = buildTree(files.map((f) => f.path))
-
   const startEdit = () => {
     setEditContent(files[selectedFile].content)
     setEditing(true)
@@ -35,11 +32,11 @@ export default function ProjectPreview({ files, onFilesChange }: ProjectPreviewP
   }
 
   return (
-    <div className="border border-gray-800 rounded-xl overflow-hidden">
-      <div className="flex border-b border-gray-800">
+    <div className="neu-card overflow-hidden">
+      <div className="flex">
         {/* File tree */}
-        <div className="w-64 bg-gray-900/50 border-r border-gray-800 max-h-96 overflow-y-auto">
-          <div className="p-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <div className="w-64 bg-neu-base border-r border-neu-dark/30 max-h-96 overflow-y-auto">
+          <div className="p-3 text-xs font-medium text-neu-text-muted uppercase tracking-wider">
             Project Files ({files.length})
           </div>
           {files.map((file, i) => (
@@ -49,13 +46,13 @@ export default function ProjectPreview({ files, onFilesChange }: ProjectPreviewP
                 setSelectedFile(i)
                 setEditing(false)
               }}
-              className={`w-full text-left px-3 py-1.5 text-sm truncate transition ${
+              className={`w-full text-left px-3 py-2 text-sm truncate transition ${
                 selectedFile === i
-                  ? 'bg-blue-600/20 text-blue-400'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                  ? 'neu-pressed text-neu-purple font-medium'
+                  : 'text-neu-text-light hover:text-neu-text hover:bg-neu-dark/20'
               }`}
             >
-              <span className="text-gray-600 mr-1">
+              <span className="text-neu-text-muted mr-1">
                 {'  '.repeat(file.path.split('/').length - 1)}
               </span>
               {file.path}
@@ -65,12 +62,12 @@ export default function ProjectPreview({ files, onFilesChange }: ProjectPreviewP
 
         {/* File content */}
         <div className="flex-1 max-h-96 overflow-y-auto">
-          <div className="flex items-center justify-between px-4 py-2 bg-gray-900/30 border-b border-gray-800">
-            <span className="text-sm text-gray-400">{files[selectedFile]?.path}</span>
+          <div className="flex items-center justify-between px-4 py-2.5 bg-neu-dark/20 border-b border-neu-dark/30">
+            <span className="text-sm text-neu-text-light">{files[selectedFile]?.path}</span>
             {!editing ? (
               <button
                 onClick={startEdit}
-                className="text-xs text-blue-400 hover:text-blue-300"
+                className="neu-btn text-xs text-neu-purple px-3 py-1 rounded-lg font-medium"
               >
                 Edit
               </button>
@@ -78,13 +75,13 @@ export default function ProjectPreview({ files, onFilesChange }: ProjectPreviewP
               <div className="flex gap-2">
                 <button
                   onClick={() => setEditing(false)}
-                  className="text-xs text-gray-500 hover:text-gray-300"
+                  className="neu-btn text-xs text-neu-text-muted px-3 py-1 rounded-lg"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={saveEdit}
-                  className="text-xs text-green-400 hover:text-green-300"
+                  className="neu-btn-green text-xs px-3 py-1 rounded-lg font-medium"
                 >
                   Save
                 </button>
@@ -95,10 +92,10 @@ export default function ProjectPreview({ files, onFilesChange }: ProjectPreviewP
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full h-80 p-4 bg-gray-950 text-sm font-mono text-gray-300 focus:outline-none resize-none"
+              className="w-full h-80 p-4 bg-neu-base text-sm font-mono text-neu-text focus:outline-none resize-none"
             />
           ) : (
-            <pre className="p-4 text-sm font-mono text-gray-300 whitespace-pre-wrap">
+            <pre className="p-4 text-sm font-mono text-neu-text-light whitespace-pre-wrap bg-neu-base">
               {files[selectedFile]?.content}
             </pre>
           )}
@@ -106,17 +103,4 @@ export default function ProjectPreview({ files, onFilesChange }: ProjectPreviewP
       </div>
     </div>
   )
-}
-
-function buildTree(paths: string[]): Record<string, unknown> {
-  const tree: Record<string, unknown> = {}
-  for (const path of paths) {
-    const parts = path.split('/')
-    let current = tree
-    for (const part of parts) {
-      if (!current[part]) current[part] = {}
-      current = current[part] as Record<string, unknown>
-    }
-  }
-  return tree
 }

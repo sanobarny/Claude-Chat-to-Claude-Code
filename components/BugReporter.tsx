@@ -27,10 +27,10 @@ interface BugReporterProps {
 }
 
 const LABELS = [
-  { value: 'bug', label: 'Bug', color: 'bg-red-600/20 text-red-400 border-red-800' },
-  { value: 'ui', label: 'UI Issue', color: 'bg-purple-600/20 text-purple-400 border-purple-800' },
-  { value: 'crash', label: 'Crash', color: 'bg-orange-600/20 text-orange-400 border-orange-800' },
-  { value: 'feature', label: 'Feature Request', color: 'bg-blue-600/20 text-blue-400 border-blue-800' },
+  { value: 'bug', label: 'Bug', activeClass: 'neu-btn-red' },
+  { value: 'ui', label: 'UI Issue', activeClass: 'neu-btn-purple' },
+  { value: 'crash', label: 'Crash', activeClass: 'neu-btn-yellow' },
+  { value: 'feature', label: 'Feature Request', activeClass: 'neu-btn-purple' },
 ]
 
 export default function BugReporter({ app, token, projectFiles, onClose, onFixPushed }: BugReporterProps) {
@@ -64,7 +64,6 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
     )
   }
 
-  // Handle screenshot upload
   const handleImageUpload = async (fileList: FileList) => {
     const newScreenshots: { name: string; dataUrl: string }[] = []
     for (const file of Array.from(fileList)) {
@@ -78,16 +77,12 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
     }
     setScreenshots((prev) => [...prev, ...newScreenshots])
 
-    // Extract text from screenshots using canvas OCR-like approach
     for (const ss of newScreenshots) {
       extractTextFromImage(ss.dataUrl)
     }
   }
 
-  // Simple text extraction from error screenshots by scanning common patterns
   const extractTextFromImage = (dataUrl: string) => {
-    // We use the image itself as context — the real extraction happens
-    // when we send it to the analyze endpoint. Store the base64 for analysis.
     const base64 = dataUrl.split(',')[1]
     if (base64) {
       setExtractedText((prev) =>
@@ -96,7 +91,6 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
     }
   }
 
-  // Analyze error and get suggested fixes
   const handleAnalyze = async () => {
     setAnalyzing(true)
     setError('')
@@ -130,14 +124,12 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
     }
   }
 
-  // Auto-fix: apply fixes and push to GitHub
   const handleAutoFix = async () => {
     if (!analysis?.fixes.length) return
     setAutoFixing(true)
     setError('')
 
     try {
-      // Apply fixes to project files
       const updatedFiles = [...projectFiles]
       for (const fix of analysis.fixes) {
         const idx = updatedFiles.findIndex((f) => f.path === fix.filePath)
@@ -146,7 +138,6 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
         }
       }
 
-      // Push to GitHub
       const [owner, repo] = app.repoFullName.split('/')
       const fixDescriptions = analysis.fixes.map((f) => f.description).join(', ')
 
@@ -175,7 +166,6 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
     }
   }
 
-  // Create GitHub issue
   const handleSubmitIssue = async () => {
     if (!title.trim()) {
       setError('Title is required')
@@ -233,21 +223,21 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="neu-card max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-7">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-semibold">Report & Auto-Fix</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                <span className="text-gray-400">{app.repoFullName}</span>
+              <h2 className="text-lg font-semibold text-neu-text">Report & Auto-Fix</h2>
+              <p className="text-sm text-neu-text-muted mt-1">
+                <span className="text-neu-text-light">{app.repoFullName}</span>
                 {' — '}describe the issue or upload a screenshot
               </p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-white text-xl leading-none"
+              className="neu-btn w-8 h-8 rounded-full flex items-center justify-center text-neu-text-muted hover:text-neu-text text-lg"
             >
               ✕
             </button>
@@ -255,52 +245,52 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
 
           {submitted ? (
             <div className="space-y-4">
-              <div className="bg-green-900/20 border border-green-800 rounded-lg p-4">
-                <p className="text-sm text-green-400 font-medium">Issue created!</p>
+              <div className="neu-card-sm p-5">
+                <p className="text-sm text-green-600 font-semibold">Issue created!</p>
                 <a
                   href={issueUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-blue-400 hover:text-blue-300 underline mt-2 block"
+                  className="text-sm text-neu-purple hover:text-neu-pink underline mt-2 block font-medium"
                 >
                   → View Issue on GitHub
                 </a>
                 {fixResult && (
-                  <div className="mt-3 pt-3 border-t border-green-800">
-                    <p className="text-sm text-green-400">Auto-fix was pushed!</p>
+                  <div className="mt-3 pt-3 border-t border-neu-dark/30">
+                    <p className="text-sm text-green-600 font-medium">Auto-fix was pushed!</p>
                     <a
                       href={fixResult.commitUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-400 hover:text-blue-300 underline"
+                      className="text-sm text-neu-purple hover:text-neu-pink underline"
                     >
                       → View Fix Commit
                     </a>
-                    <p className="text-xs text-gray-500 mt-1">Vercel will auto-redeploy with the fix.</p>
+                    <p className="text-xs text-neu-text-muted mt-1">Vercel will auto-redeploy with the fix.</p>
                   </div>
                 )}
               </div>
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+                className="neu-btn-purple px-5 py-2.5 rounded-xl text-sm font-medium"
               >
                 Done
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* Labels */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
+                <label className="block text-sm font-medium text-neu-text mb-2">Type</label>
                 <div className="flex flex-wrap gap-2">
                   {LABELS.map((l) => (
                     <button
                       key={l.value}
                       onClick={() => toggleLabel(l.value)}
-                      className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                      className={`text-xs px-4 py-2 rounded-xl font-medium transition ${
                         selectedLabels.includes(l.value)
-                          ? l.color
-                          : 'bg-gray-800 text-gray-500 border-gray-700'
+                          ? l.activeClass
+                          : 'neu-btn text-neu-text-muted'
                       }`}
                     >
                       {l.label}
@@ -311,26 +301,26 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
 
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Title <span className="text-red-400">*</span>
+                <label className="block text-sm font-medium text-neu-text mb-2">
+                  Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Brief summary of the issue"
-                  className="w-full px-4 py-2 bg-gray-950 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                  className="neu-input w-full px-4 py-3 rounded-xl text-sm text-neu-text placeholder:text-neu-text-muted"
                 />
               </div>
 
               {/* Screenshot upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-neu-text mb-2">
                   Screenshots (error screens, console logs, etc.)
                 </label>
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-gray-700 rounded-xl p-6 text-center cursor-pointer hover:border-gray-500 transition bg-gray-950/50"
+                  className="neu-card-inset rounded-2xl p-6 text-center cursor-pointer transition"
                 >
                   <input
                     ref={fileInputRef}
@@ -340,10 +330,10 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
                     onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
                     className="hidden"
                   />
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-neu-text-light">
                     Click to upload error screenshots or drag & drop
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">PNG, JPG — will be scanned for error patterns</p>
+                  <p className="text-xs text-neu-text-muted mt-1">PNG, JPG — will be scanned for error patterns</p>
                 </div>
                 {screenshots.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-3">
@@ -352,15 +342,15 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
                         <img
                           src={ss.dataUrl}
                           alt={ss.name}
-                          className="w-24 h-24 object-cover rounded-lg border border-gray-700"
+                          className="w-24 h-24 object-cover rounded-xl neu-card-sm"
                         />
                         <button
                           onClick={() => setScreenshots((prev) => prev.filter((_, j) => j !== i))}
-                          className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                          className="absolute -top-2 -right-2 neu-btn-red text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
                         >
                           ✕
                         </button>
-                        <span className="text-xs text-gray-500 block mt-1 truncate max-w-[96px]">
+                        <span className="text-xs text-neu-text-muted block mt-1 truncate max-w-[96px]">
                           {ss.name}
                         </span>
                       </div>
@@ -371,7 +361,7 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-neu-text mb-2">
                   Error Message / Description
                 </label>
                 <textarea
@@ -379,83 +369,83 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Paste the full error message or describe what went wrong..."
                   rows={3}
-                  className="w-full px-4 py-2 bg-gray-950 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 resize-y font-mono"
+                  className="neu-input w-full px-4 py-3 rounded-xl text-sm text-neu-text placeholder:text-neu-text-muted resize-y font-mono"
                 />
               </div>
 
               {/* Steps / Expected / Actual */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Steps to Reproduce</label>
+                <label className="block text-sm font-medium text-neu-text mb-2">Steps to Reproduce</label>
                 <textarea
                   value={steps}
                   onChange={(e) => setSteps(e.target.value)}
                   placeholder={"1. Go to...\n2. Click on...\n3. See error"}
                   rows={2}
-                  className="w-full px-4 py-2 bg-gray-950 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 resize-y font-mono"
+                  className="neu-input w-full px-4 py-3 rounded-xl text-sm text-neu-text placeholder:text-neu-text-muted resize-y font-mono"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Expected</label>
+                  <label className="block text-sm font-medium text-neu-text mb-2">Expected</label>
                   <textarea
                     value={expected}
                     onChange={(e) => setExpected(e.target.value)}
                     placeholder="What should happen"
                     rows={2}
-                    className="w-full px-4 py-2 bg-gray-950 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 resize-y"
+                    className="neu-input w-full px-4 py-3 rounded-xl text-sm text-neu-text placeholder:text-neu-text-muted resize-y"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Actual</label>
+                  <label className="block text-sm font-medium text-neu-text mb-2">Actual</label>
                   <textarea
                     value={actual}
                     onChange={(e) => setActual(e.target.value)}
                     placeholder="What actually happens"
                     rows={2}
-                    className="w-full px-4 py-2 bg-gray-950 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 resize-y"
+                    className="neu-input w-full px-4 py-3 rounded-xl text-sm text-neu-text placeholder:text-neu-text-muted resize-y"
                   />
                 </div>
               </div>
 
               {/* Analyze & Auto-Fix section */}
-              <div className="border border-gray-700 rounded-xl p-4 bg-gray-950/50 space-y-3">
+              <div className="neu-card-inset p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-200">Auto-Fix Engine</h3>
-                    <p className="text-xs text-gray-500">Analyze the error and attempt to fix it automatically</p>
+                    <h3 className="text-sm font-semibold text-neu-text">Auto-Fix Engine</h3>
+                    <p className="text-xs text-neu-text-muted">Analyze the error and attempt to fix it automatically</p>
                   </div>
                   <button
                     onClick={handleAnalyze}
                     disabled={analyzing || (!description && !title && screenshots.length === 0)}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="neu-btn-purple px-5 py-2.5 rounded-xl text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {analyzing ? 'Analyzing...' : 'Scan & Analyze'}
                   </button>
                 </div>
 
                 {analysis && (
-                  <div className="space-y-3 pt-3 border-t border-gray-800">
-                    <div className="bg-gray-900 rounded-lg p-3">
-                      <p className="text-sm text-gray-300">{analysis.summary}</p>
+                  <div className="space-y-3 pt-3 border-t border-neu-dark/30">
+                    <div className="neu-card-sm p-4">
+                      <p className="text-sm text-neu-text">{analysis.summary}</p>
                     </div>
 
                     {analysis.fixes.length > 0 ? (
                       <>
                         <div className="space-y-2">
-                          <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          <h4 className="text-xs font-medium text-neu-text-muted uppercase tracking-wider">
                             Suggested Fixes ({analysis.fixes.length})
                           </h4>
                           {analysis.fixes.map((fix, i) => (
-                            <div key={i} className="bg-gray-900 rounded-lg p-3 border border-gray-800">
-                              <p className="text-sm text-green-400">{fix.description}</p>
-                              <p className="text-xs text-gray-500 mt-1">{fix.filePath}</p>
+                            <div key={i} className="neu-card-sm p-4">
+                              <p className="text-sm text-green-600 font-medium">{fix.description}</p>
+                              <p className="text-xs text-neu-text-muted mt-1">{fix.filePath}</p>
                             </div>
                           ))}
                         </div>
                         <button
                           onClick={handleAutoFix}
                           disabled={autoFixing}
-                          className="w-full py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="neu-btn-green w-full py-3 rounded-xl text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           {autoFixing
                             ? 'Applying fixes & pushing...'
@@ -463,23 +453,23 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
                         </button>
                       </>
                     ) : (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-neu-text-muted">
                         No auto-fixable patterns detected. You can still create an issue below.
                       </p>
                     )}
 
                     {fixResult && (
-                      <div className="bg-green-900/20 border border-green-800 rounded-lg p-3">
-                        <p className="text-sm text-green-400 font-medium">Fix pushed successfully!</p>
+                      <div className="neu-card-sm p-4">
+                        <p className="text-sm text-green-600 font-semibold">Fix pushed successfully!</p>
                         <a
                           href={fixResult.commitUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-400 hover:text-blue-300 underline"
+                          className="text-xs text-neu-purple hover:text-neu-pink underline"
                         >
                           → View commit
                         </a>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-neu-text-muted mt-1">
                           Vercel will auto-redeploy with the fix.
                         </p>
                       </div>
@@ -489,20 +479,20 @@ export default function BugReporter({ app, token, projectFiles, onClose, onFixPu
               </div>
 
               {/* Error */}
-              {error && <p className="text-sm text-red-400">{error}</p>}
+              {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
 
               {/* Actions */}
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 text-gray-400 hover:text-white text-sm"
+                  className="neu-btn px-5 py-2.5 rounded-xl text-sm text-neu-text-light"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitIssue}
                   disabled={submitting || !title.trim()}
-                  className="px-6 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="neu-btn-red px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {submitting ? 'Creating Issue...' : 'Create GitHub Issue'}
                 </button>
