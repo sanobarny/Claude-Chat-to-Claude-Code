@@ -47,12 +47,10 @@ export default function GitHubSettings({
       return
     }
 
-    // Validate token and fetch repos
     const fetchRepos = async () => {
       setLoading(true)
       setError('')
       try {
-        // Get username
         const userRes = await fetch('https://api.github.com/user', {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -60,7 +58,6 @@ export default function GitHubSettings({
         const userData = await userRes.json()
         setUsername(userData.login)
 
-        // Fetch repos
         const res = await fetch('/api/github/repos', {
           headers: { 'x-github-token': token },
         })
@@ -83,7 +80,7 @@ export default function GitHubSettings({
     <div className="space-y-5">
       {/* Token input */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-neu-text mb-2">
           GitHub Personal Access Token
         </label>
         <div className="flex gap-2">
@@ -93,25 +90,25 @@ export default function GitHubSettings({
               value={token}
               onChange={(e) => onTokenChange(e.target.value)}
               placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm font-mono focus:outline-none focus:border-blue-500 pr-16"
+              className="neu-input w-full px-4 py-3 rounded-xl text-sm font-mono text-neu-text placeholder:text-neu-text-muted pr-16"
             />
             <button
               onClick={() => setShowToken(!showToken)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-300"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neu-text-muted hover:text-neu-text transition"
             >
               {showToken ? 'Hide' : 'Show'}
             </button>
           </div>
         </div>
         {username && (
-          <p className="text-sm text-green-400 mt-2">
-            ✓ Connected as <span className="font-medium">{username}</span>
+          <p className="text-sm text-green-600 mt-2 font-medium">
+            Connected as <span className="font-semibold">{username}</span>
           </p>
         )}
-        {error && <p className="text-sm text-red-400 mt-2">✕ {error}</p>}
-        <p className="text-xs text-gray-600 mt-2">
-          Needs <code className="text-gray-500">repo</code> scope.{' '}
-          Create one at GitHub → Settings → Developer settings → Personal access tokens
+        {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+        <p className="text-xs text-neu-text-muted mt-2">
+          Needs <code className="text-neu-text-light bg-neu-dark/30 px-1.5 py-0.5 rounded">repo</code> scope.{' '}
+          Create one at GitHub Settings → Developer settings → Personal access tokens
         </p>
       </div>
 
@@ -119,29 +116,25 @@ export default function GitHubSettings({
       {token && username && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-neu-text mb-2">
               Repository
             </label>
             <div className="flex gap-3">
               <button
                 onClick={() => onRepoModeChange('new')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  repoMode === 'new'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:text-white'
+                className={`px-5 py-2.5 rounded-xl text-sm font-medium transition ${
+                  repoMode === 'new' ? 'neu-btn-purple' : 'neu-btn text-neu-text-light'
                 }`}
               >
-                Create New
+                Create New Repo
               </button>
               <button
                 onClick={() => onRepoModeChange('existing')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  repoMode === 'existing'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:text-white'
+                className={`px-5 py-2.5 rounded-xl text-sm font-medium transition ${
+                  repoMode === 'existing' ? 'neu-btn-purple' : 'neu-btn text-neu-text-light'
                 }`}
               >
-                Use Existing
+                Use Existing Repo
               </button>
             </div>
           </div>
@@ -153,14 +146,14 @@ export default function GitHubSettings({
                 placeholder="my-awesome-app"
                 value={newRepoName}
                 onChange={(e) => onNewRepoNameChange(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                className="neu-input w-full px-4 py-3 rounded-xl text-sm text-neu-text placeholder:text-neu-text-muted"
               />
-              <label className="flex items-center gap-2 text-sm text-gray-400">
+              <label className="flex items-center gap-2 text-sm text-neu-text-light cursor-pointer">
                 <input
                   type="checkbox"
                   checked={isPrivate}
                   onChange={(e) => onIsPrivateChange(e.target.checked)}
-                  className="rounded border-gray-700"
+                  className="rounded border-neu-dark accent-neu-purple"
                 />
                 Private repository
               </label>
@@ -168,17 +161,17 @@ export default function GitHubSettings({
           ) : (
             <div>
               {loading ? (
-                <p className="text-sm text-gray-500">Loading repos...</p>
+                <p className="text-sm text-neu-text-muted">Loading repos...</p>
               ) : (
                 <select
                   value={selectedRepo}
                   onChange={(e) => onSelectedRepoChange(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                  className="neu-input w-full px-4 py-3 rounded-xl text-sm text-neu-text"
                 >
                   <option value="">Select a repository...</option>
                   {repos.map((repo) => (
                     <option key={repo.full_name} value={repo.full_name}>
-                      {repo.full_name} {repo.private ? '🔒' : ''}
+                      {repo.full_name} {repo.private ? '(private)' : ''}
                     </option>
                   ))}
                 </select>

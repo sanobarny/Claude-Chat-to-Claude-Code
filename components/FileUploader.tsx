@@ -60,20 +60,16 @@ export default function FileUploader({ files, onFilesChange }: FileUploaderProps
       <div className="flex gap-3">
         <button
           onClick={() => setPasteMode(false)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-            !pasteMode
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-800 text-gray-400 hover:text-white'
+          className={`px-5 py-2.5 rounded-xl text-sm font-medium transition ${
+            !pasteMode ? 'neu-btn-purple' : 'neu-btn text-neu-text-light'
           }`}
         >
           Upload Files
         </button>
         <button
           onClick={() => setPasteMode(true)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-            pasteMode
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-800 text-gray-400 hover:text-white'
+          className={`px-5 py-2.5 rounded-xl text-sm font-medium transition ${
+            pasteMode ? 'neu-btn-purple' : 'neu-btn text-neu-text-light'
           }`}
         >
           Paste Code
@@ -89,10 +85,10 @@ export default function FileUploader({ files, onFilesChange }: FileUploaderProps
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition ${
+          className={`rounded-2xl p-12 text-center cursor-pointer transition ${
             isDragging
-              ? 'border-blue-500 bg-blue-500/10'
-              : 'border-gray-700 hover:border-gray-500 bg-gray-900/50'
+              ? 'neu-pressed'
+              : 'neu-card-inset'
           }`}
         >
           <input
@@ -104,10 +100,10 @@ export default function FileUploader({ files, onFilesChange }: FileUploaderProps
             className="hidden"
           />
           <div className="text-4xl mb-3">📁</div>
-          <p className="text-lg font-medium text-gray-300">
+          <p className="text-lg font-medium text-neu-text">
             Drag & drop JSX/TSX files here
           </p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-neu-text-muted mt-1">
             or click to browse
           </p>
         </div>
@@ -118,19 +114,19 @@ export default function FileUploader({ files, onFilesChange }: FileUploaderProps
             placeholder="Filename (e.g., App.tsx)"
             value={pasteFilename}
             onChange={(e) => setPasteFilename(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+            className="neu-input w-full px-4 py-3 rounded-xl text-sm text-neu-text placeholder:text-neu-text-muted"
           />
           <textarea
             placeholder="Paste your JSX code from Claude Chat here..."
             value={pasteContent}
             onChange={(e) => setPasteContent(e.target.value)}
             rows={12}
-            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-sm font-mono focus:outline-none focus:border-blue-500 resize-y"
+            className="neu-input w-full px-4 py-3 rounded-xl text-sm font-mono text-neu-text placeholder:text-neu-text-muted resize-y"
           />
           <button
             onClick={handlePasteAdd}
             disabled={!pasteContent.trim()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="neu-btn-purple px-5 py-2.5 rounded-xl text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Add File
           </button>
@@ -139,24 +135,24 @@ export default function FileUploader({ files, onFilesChange }: FileUploaderProps
 
       {files.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400">
+          <h3 className="text-sm font-medium text-neu-text-light">
             Uploaded Files ({files.length})
           </h3>
           {files.map((file, i) => (
             <div
               key={i}
-              className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg px-4 py-3"
+              className="neu-card-sm flex items-center justify-between px-4 py-3"
             >
               <div className="flex items-center gap-3">
-                <span className="text-blue-400 text-sm">📄</span>
-                <span className="text-sm font-medium">{file.filename}</span>
-                <span className="text-xs text-gray-500">
+                <span className="text-neu-purple text-sm">📄</span>
+                <span className="text-sm font-medium text-neu-text">{file.filename}</span>
+                <span className="text-xs text-neu-text-muted">
                   {file.content.split('\n').length} lines
                 </span>
               </div>
               <button
                 onClick={() => removeFile(i)}
-                className="text-gray-500 hover:text-red-400 text-sm"
+                className="text-neu-text-muted hover:text-red-500 text-sm transition"
               >
                 ✕
               </button>

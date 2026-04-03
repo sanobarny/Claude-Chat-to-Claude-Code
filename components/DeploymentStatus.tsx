@@ -40,7 +40,7 @@ export default function DeploymentStatus({
               ? 'active'
               : stage === 'done'
               ? 'done'
-              : stage === 'error' && stage !== 'creating-repo'
+              : stage === 'error'
               ? 'error'
               : 'pending'
           }
@@ -53,15 +53,15 @@ export default function DeploymentStatus({
 
       {/* Error */}
       {stage === 'error' && error && (
-        <div className="bg-red-900/30 border border-red-800 rounded-lg p-4 text-sm text-red-300">
+        <div className="neu-card-inset p-4 text-sm text-red-500">
           {error}
         </div>
       )}
 
       {/* Success */}
       {stage === 'done' && (
-        <div className="bg-green-900/20 border border-green-800 rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-green-400">
+        <div className="neu-card-sm p-6 space-y-4">
+          <h3 className="text-lg font-semibold text-green-600">
             Successfully deployed to GitHub!
           </h3>
           <div className="space-y-2">
@@ -70,7 +70,7 @@ export default function DeploymentStatus({
                 href={repoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block text-sm text-blue-400 hover:text-blue-300 underline"
+                className="block text-sm text-neu-purple hover:text-neu-pink underline font-medium"
               >
                 → View Repository on GitHub
               </a>
@@ -80,24 +80,24 @@ export default function DeploymentStatus({
                 href={commitUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block text-sm text-blue-400 hover:text-blue-300 underline"
+                className="block text-sm text-neu-purple hover:text-neu-pink underline font-medium"
               >
                 → View Commit
               </a>
             )}
           </div>
-          <div className="bg-gray-900 rounded-lg p-4 space-y-2">
-            <p className="text-sm font-medium text-gray-300">
+          <div className="neu-card-inset p-4 space-y-2">
+            <p className="text-sm font-medium text-neu-text">
               Next: Connect to Vercel for auto-deploy
             </p>
-            <ol className="text-sm text-gray-400 space-y-1 list-decimal list-inside">
+            <ol className="text-sm text-neu-text-light space-y-1 list-decimal list-inside">
               <li>
                 Go to{' '}
                 <a
                   href="https://vercel.com/new"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 underline"
+                  className="text-neu-purple hover:text-neu-pink underline"
                 >
                   vercel.com/new
                 </a>
@@ -131,17 +131,17 @@ function Step({
 
   const color =
     status === 'done'
-      ? 'text-green-400'
+      ? 'text-green-600'
       : status === 'active'
-      ? 'text-blue-400 animate-pulse'
+      ? 'text-neu-purple animate-pulse'
       : status === 'error'
-      ? 'text-red-400'
-      : 'text-gray-600'
+      ? 'text-red-500'
+      : 'text-neu-text-muted'
 
   return (
     <div className={`flex items-center gap-3 ${color}`}>
       <span className="text-lg w-6 text-center">{icon}</span>
-      <span className="text-sm">{label}</span>
+      <span className="text-sm font-medium">{label}</span>
     </div>
   )
 }

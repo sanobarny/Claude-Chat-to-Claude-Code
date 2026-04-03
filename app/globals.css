@@ -2,6 +2,154 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --neu-base: #e8e0f0;
+  --neu-light: #ffffff;
+  --neu-dark: #c8bcd8;
+  --neu-accent: #b0a0d0;
+  --neu-purple: #9b8ec4;
+  --neu-pink: #d4a0c8;
+  --neu-blue: #a0b8e0;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--neu-base);
+}
+
+/* Neumorphism utilities */
+.neu-flat {
+  background: var(--neu-base);
+  box-shadow:
+    8px 8px 16px var(--neu-dark),
+    -8px -8px 16px var(--neu-light);
+}
+
+.neu-pressed {
+  background: var(--neu-base);
+  box-shadow:
+    inset 4px 4px 8px var(--neu-dark),
+    inset -4px -4px 8px var(--neu-light);
+}
+
+.neu-convex {
+  background: linear-gradient(145deg, var(--neu-light), var(--neu-dark));
+  box-shadow:
+    6px 6px 12px var(--neu-dark),
+    -6px -6px 12px var(--neu-light);
+}
+
+.neu-btn {
+  background: linear-gradient(145deg, #f0e8f8, #d8d0e0);
+  box-shadow:
+    4px 4px 8px var(--neu-dark),
+    -4px -4px 8px var(--neu-light);
+  transition: all 0.2s ease;
+}
+
+.neu-btn:hover {
+  box-shadow:
+    2px 2px 4px var(--neu-dark),
+    -2px -2px 4px var(--neu-light);
+}
+
+.neu-btn:active, .neu-btn-active {
+  box-shadow:
+    inset 3px 3px 6px var(--neu-dark),
+    inset -3px -3px 6px var(--neu-light);
+}
+
+.neu-input {
+  background: var(--neu-base);
+  box-shadow:
+    inset 3px 3px 6px var(--neu-dark),
+    inset -3px -3px 6px var(--neu-light);
+  border: none;
+  outline: none;
+}
+
+.neu-input:focus {
+  box-shadow:
+    inset 4px 4px 8px var(--neu-dark),
+    inset -4px -4px 8px var(--neu-light);
+}
+
+.neu-card {
+  background: var(--neu-base);
+  box-shadow:
+    8px 8px 16px var(--neu-dark),
+    -8px -8px 16px var(--neu-light);
+  border-radius: 20px;
+}
+
+.neu-card-sm {
+  background: var(--neu-base);
+  box-shadow:
+    5px 5px 10px var(--neu-dark),
+    -5px -5px 10px var(--neu-light);
+  border-radius: 16px;
+}
+
+.neu-card-inset {
+  background: var(--neu-base);
+  box-shadow:
+    inset 5px 5px 10px var(--neu-dark),
+    inset -5px -5px 10px var(--neu-light);
+  border-radius: 16px;
+}
+
+/* Accent button variants */
+.neu-btn-purple {
+  background: linear-gradient(145deg, #b8a8d8, #9080b8);
+  color: white;
+  box-shadow:
+    4px 4px 8px var(--neu-dark),
+    -4px -4px 8px var(--neu-light);
+}
+
+.neu-btn-purple:hover {
+  background: linear-gradient(145deg, #c0b0e0, #9888c0);
+  box-shadow:
+    2px 2px 4px var(--neu-dark),
+    -2px -2px 4px var(--neu-light);
+}
+
+.neu-btn-green {
+  background: linear-gradient(145deg, #90d8a8, #70b888);
+  color: white;
+  box-shadow:
+    4px 4px 8px var(--neu-dark),
+    -4px -4px 8px var(--neu-light);
+}
+
+.neu-btn-green:hover {
+  background: linear-gradient(145deg, #98e0b0, #78c090);
+}
+
+.neu-btn-red {
+  background: linear-gradient(145deg, #e8a0a0, #c88080);
+  color: white;
+  box-shadow:
+    4px 4px 8px var(--neu-dark),
+    -4px -4px 8px var(--neu-light);
+}
+
+.neu-btn-yellow {
+  background: linear-gradient(145deg, #e8d090, #c8b070);
+  color: white;
+  box-shadow:
+    4px 4px 8px var(--neu-dark),
+    -4px -4px 8px var(--neu-light);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--neu-base);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--neu-dark);
+  border-radius: 4px;
 }

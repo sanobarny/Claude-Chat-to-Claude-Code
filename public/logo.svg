@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8e0f0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0e0f0;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="swirl1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a8b4f0;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#c4a8e8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0a8d8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="swirl2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#b8d0f0;stop-opacity:0.8" />
+      <stop offset="50%" style="stop-color:#c8b0e8;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#e8b0d0;stop-opacity:0.6" />
+    </linearGradient>
+    <filter id="neumorph">
+      <feDropShadow dx="4" dy="4" stdDeviation="8" flood-color="#c0b8d0" flood-opacity="0.5"/>
+      <feDropShadow dx="-4" dy="-4" stdDeviation="8" flood-color="#ffffff" flood-opacity="0.8"/>
+    </filter>
+    <filter id="inner-shadow">
+      <feDropShadow dx="2" dy="2" stdDeviation="4" flood-color="#b0a0c0" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- Background rounded square -->
+  <rect x="32" y="32" width="448" height="448" rx="80" ry="80" fill="url(#bg)" filter="url(#neumorph)"/>
+  <!-- Swirl shape 1 - outer -->
+  <path d="M256 120 C340 120 400 180 400 256 C400 332 340 392 256 392 C200 392 152 360 132 312 C152 340 192 360 240 360 C312 360 370 300 370 240 C370 180 320 140 270 140 C230 140 200 160 180 190 C200 150 226 120 256 120Z" fill="url(#swirl1)" filter="url(#inner-shadow)" opacity="0.9"/>
+  <!-- Swirl shape 2 - middle -->
+  <path d="M256 160 C320 160 368 200 368 256 C368 312 320 352 256 352 C216 352 182 332 168 300 C184 324 212 340 248 340 C300 340 340 300 340 252 C340 204 308 176 268 176 C240 176 218 192 206 214 C218 180 236 160 256 160Z" fill="url(#swirl2)" filter="url(#inner-shadow)" opacity="0.85"/>
+  <!-- Chat bubble arrow -->
+  <path d="M140 280 L120 320 L170 300 C156 308 140 300 140 280Z" fill="url(#swirl1)" opacity="0.9"/>
+  <!-- Code braces {{ }} -->
+  <text x="240" y="272" font-family="monospace" font-weight="bold" font-size="64" fill="white" opacity="0.9" filter="url(#inner-shadow)">&#123;&#125;</text>
+</svg>
